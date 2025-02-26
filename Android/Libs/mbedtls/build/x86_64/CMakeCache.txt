@@ -185,16 +185,16 @@ CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 CMAKE_PROJECT_NAME:STATIC=Mbed TLS
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION:STATIC=4.0.0
+CMAKE_PROJECT_VERSION:STATIC=3.6.2
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION_MAJOR:STATIC=4
+CMAKE_PROJECT_VERSION_MAJOR:STATIC=3
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION_MINOR:STATIC=0
+CMAKE_PROJECT_VERSION_MINOR:STATIC=6
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION_PATCH:STATIC=0
+CMAKE_PROJECT_VERSION_PATCH:STATIC=2
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION_TWEAK:STATIC=
@@ -272,10 +272,10 @@ CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 //Disable package configuration, target export and installation
 DISABLE_PACKAGE_CONFIG_AND_INSTALL:BOOL=OFF
 
-//Build TF-PSA-Crypto programs.
+//Build Mbed TLS programs.
 ENABLE_PROGRAMS:BOOL=ON
 
-//Build TF-PSA-Crypto tests.
+//Build Mbed TLS tests.
 ENABLE_TESTING:BOOL=Off
 
 //Path to a library.
@@ -334,6 +334,9 @@ TF_PSA_CRYPTO_TARGET_PREFIX:STRING=
 //TF-PSA-Crypto user config file (appended to default).
 TF_PSA_CRYPTO_USER_CONFIG_FILE:FILEPATH=
 
+//Allow unsafe builds. These builds ARE NOT SECURE.
+UNSAFE_BUILD:BOOL=OFF
+
 //Build Mbed TLS shared library.
 USE_SHARED_MBEDTLS_LIBRARY:BOOL=On
 
@@ -353,16 +356,22 @@ builtin_LIB_DEPENDS:STATIC=general;everest;general;p256m;
 builtin_static_LIB_DEPENDS:STATIC=general;everest;general;p256m;
 
 //Dependencies for the target
+mbedcrypto_LIB_DEPENDS:STATIC=general;everest;general;p256m;
+
+//Dependencies for the target
+mbedcrypto_static_LIB_DEPENDS:STATIC=general;everest;general;p256m;
+
+//Dependencies for the target
 mbedtls_LIB_DEPENDS:STATIC=general;mbedx509;
 
 //Dependencies for the target
 mbedtls_static_LIB_DEPENDS:STATIC=general;mbedx509_static;
 
 //Dependencies for the target
-mbedx509_LIB_DEPENDS:STATIC=general;tfpsacrypto;
+mbedx509_LIB_DEPENDS:STATIC=general;mbedcrypto;
 
 //Dependencies for the target
-mbedx509_static_LIB_DEPENDS:STATIC=general;tfpsacrypto_static;
+mbedx509_static_LIB_DEPENDS:STATIC=general;mbedcrypto_static;
 
 //Dependencies for the target
 tfpsacrypto_LIB_DEPENDS:STATIC=general;builtin;
@@ -493,7 +502,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=28
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=20
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

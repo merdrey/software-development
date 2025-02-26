@@ -1,8 +1,8 @@
         
 ::set ABI=armaebi-v7a
 ::set ABI=x86
-set ABI=arm64-v8a
-::set ABI=x86_64
+::set ABI=arm64-v8a
+set ABI=x86_64
 
 set ANDROID_NDK=C:\Users\mergo\AppData\Local\Android\Sdk\ndk\26.1.10909125
 set TOOL_CHAIN=%ANDROID_NDK%\build\cmake\android.toolchain.cmake

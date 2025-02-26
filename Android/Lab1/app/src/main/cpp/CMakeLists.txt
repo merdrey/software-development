@@ -30,10 +30,14 @@ add_library(lab1 SHARED
 
 add_library(spdlog STATIC IMPORTED)
 set_target_properties(spdlog PROPERTIES
-        IMPORTED_LOCATION D:/software-development/Android/Libs/spdlog/build/${ANDROID_ABI}/libspdlog.a)
+        IMPORTED_LOCATION  ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../Libs/spdlog/build/${ANDROID_ABI}/libspdlog.a)
+add_library(mbedcrypto STATIC IMPORTED)
+set_target_properties(mbedcrypto PROPERTIES
+        IMPORTED_LOCATION  ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../Libs/mbedtls/build/${ANDROID_ABI}/library/libmbedcrypto.so)
 
 target_include_directories(lab1 PUBLIC
-        D:/software-development/Android/Libs/spdlog/spdlog/include)
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../Libs/spdlog/spdlog/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../Libs/mbedtls/mbedtls/include)
 
 # Specifies libraries CMake should link to your target library. You
 # can link libraries from various origins, such as libraries defined in this
@@ -45,6 +49,7 @@ target_link_libraries(lab1
 
 target_link_libraries(
         lab1
-
+        spdlog
+        mbedcrypto
         ${log-lib}
 )
