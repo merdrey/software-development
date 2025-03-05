@@ -31,7 +31,7 @@ Java_com_example_lab1_MainActivity_stringFromJNI(
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_example_lab1_MainActivity_randomBytes(JNIEnv *env, jobject, jint no) {
+Java_com_example_lab1_MainActivity_randomBytes(JNIEnv *env, jclass, jint no) {
     auto * buf = new uint8_t [no];
     mbedtls_ctr_drbg_random(&ctr_drbg, buf, no);
     jbyteArray rnd = env->NewByteArray(no);
