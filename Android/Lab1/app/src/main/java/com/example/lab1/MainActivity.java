@@ -1,7 +1,5 @@
 package com.example.lab1;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,7 +8,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.lab1.databinding.ActivityMainBinding;
@@ -18,9 +15,7 @@ import com.example.lab1.databinding.ActivityMainBinding;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import java.util.Arrays;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements TransactionEvents {
 
     // Used to load the 'lab1' library on application startup.
     static {
@@ -30,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private ActivityResultLauncher activityResultLauncher;
+    private String pin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,16 +40,45 @@ public class MainActivity extends AppCompatActivity {
                 o -> {
                     if (o.getResultCode() == Activity.RESULT_OK) {
                         Intent data = o.getData();
-                        String pin = data.getStringExtra("pin");
-                        Toast.makeText(MainActivity.this, pin, Toast.LENGTH_SHORT).show();
+                        //String pin = data.getStringExtra("pin");
+                        //Toast.makeText(MainActivity.this, pin, Toast.LENGTH_SHORT).show();
+                        pin = data.getStringExtra("pin");
+                        synchronized (MainActivity.this) {
+                            MainActivity.this.notifyAll();
+                        }
                     }
                 }
         );
     }
 
     public void onButtonClick(View v) {
+        byte[] trd = stringToHex("9F0206000000000100");
+        transaction(trd);
+    }
+
+    @Override
+    public String enterPin(int ptc, String amount) {
+        pin = "";
         Intent it = new Intent(this, PinpadActivity.class);
-        activityResultLauncher.launch(it);
+        it.putExtra("ptc", ptc);
+        it.putExtra("amount", amount);
+        synchronized (MainActivity.this) {
+            activityResultLauncher.launch(it);
+            try {
+                MainActivity.this.wait();
+            }
+            catch (Exception ex) {
+
+            }
+        }
+        return pin;
+    }
+
+    @Override
+    public void transactionResult(boolean result) {
+        runOnUiThread(()-> {
+            Toast.makeText(MainActivity.this, result ? "ok" : "failed", Toast.LENGTH_SHORT).show();
+        });
     }
 
     public static byte[] stringToHex(String s) {
@@ -78,4 +103,5 @@ public class MainActivity extends AppCompatActivity {
     public static native byte[] randomBytes(int no);
     public native byte[] encrypt(byte[] key, byte[] data);
     public native byte[] decrypt(byte[] key, byte[] data);
+    public native boolean transaction(byte[] trd);
 }

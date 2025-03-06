@@ -13,6 +13,14 @@
         android:orientation="vertical">
 
         <TextView
+            android:id="@+id/txtAmount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TextView"
+            android:textAlignment="center"
+            android:textSize="20sp" />
+
+        <TextView
             android:id="@+id/textView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -26,6 +34,12 @@
             android:layout_height="wrap_content"
             android:textAlignment="center"
             android:textSize="28sp" />
+
+        <TextView
+            android:id="@+id/txtPtc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp" />
 
         <GridLayout android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -46,5 +60,6 @@
             <Button android:id="@+id/btnKey0" android:text="0" android:onClick="keyClick" style="@style/PadButton" />
             <Button android:id="@+id/btnOK" android:text="OK" android:onClick="keyClick" style="@style/PadButton" />
         </GridLayout>
+
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
