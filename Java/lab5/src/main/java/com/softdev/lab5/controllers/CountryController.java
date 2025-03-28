@@ -1,5 +1,6 @@
 package com.softdev.lab5.controllers;
 
+import com.softdev.lab5.models.Artist;
 import com.softdev.lab5.models.Country;
 import com.softdev.lab5.repositories.CountryRepo;
 import org.apache.coyote.Response;
@@ -10,10 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -23,8 +21,17 @@ public class CountryController {
     CountryRepo repo;
 
     @GetMapping("/countries")
-    public List getAllCountries() {
+    public List<Country> getAllCountries() {
         return repo.findAll();
+    }
+
+    @GetMapping("/countries/{id}/artists")
+    public ResponseEntity<List<Artist>> getCountryArtists(@PathVariable(value = "id") Long countryId) {
+        Optional<Country> cc = repo.findById(countryId);
+        if (cc.isPresent()) {
+            return ResponseEntity.ok(cc.get().artists);
+        }
+        return ResponseEntity.ok(new ArrayList<Artist>());
     }
 
     @PostMapping("/countries")
