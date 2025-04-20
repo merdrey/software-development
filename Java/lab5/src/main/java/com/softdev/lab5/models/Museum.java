@@ -1,6 +1,8 @@
 package com.softdev.lab5.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.softdev.lab5.tools.View;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;

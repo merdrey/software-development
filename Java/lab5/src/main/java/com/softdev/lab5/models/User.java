@@ -1,6 +1,8 @@
 package com.softdev.lab5.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.softdev.lab5.tools.View;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -21,22 +23,28 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonView(View.Rest.class)
     @Column(name = "id")
     public long id;
+    @JsonView(View.Rest.class)
     @Column(name = "login")
     public String login;
     @JsonIgnore
     @Column(name = "password")
     public String password;
+    @JsonView(View.Rest.class)
     @Column(name = "email")
     public String email;
     @JsonIgnore
     @Column(name = "salt")
     public String salt;
+    @JsonView(View.Login.class)
     @Column(name = "token")
     public String token;
+    @JsonView(View.Rest.class)
     @Column(name = "activity")
     public LocalDateTime activity;
+    @JsonView(View.Rest.class)
     @ManyToMany(mappedBy = "users")
     public Set<Museum> museums = new HashSet<>();
 

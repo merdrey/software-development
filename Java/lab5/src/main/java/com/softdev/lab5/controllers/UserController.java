@@ -1,9 +1,11 @@
 package com.softdev.lab5.controllers;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.softdev.lab5.models.Museum;
 import com.softdev.lab5.models.User;
 import com.softdev.lab5.repositories.MuseumRepo;
 import com.softdev.lab5.repositories.UserRepo;
+import com.softdev.lab5.tools.View;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,7 @@ public class UserController {
     @Autowired
     MuseumRepo museumRepo;
 
+    @JsonView(View.Rest.class)
     @GetMapping("/users")
     public List<User> getAllUsers() {
         return repo.findAll();
