@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/v1")
 public class ArtistController {
@@ -33,9 +34,7 @@ public class ArtistController {
     public ResponseEntity<Object> createArtist(@RequestBody Artist art) throws Exception{
         try {
             Optional<Country> cc = countryRepo.findById(art.country.id);
-            if (cc.isPresent()) {
-                art.country = cc.get();
-            }
+            cc.ifPresent(country -> art.country = country);
             return new ResponseEntity<>(repo.save(art), HttpStatus.OK);
         }
         catch (Exception ex) {
