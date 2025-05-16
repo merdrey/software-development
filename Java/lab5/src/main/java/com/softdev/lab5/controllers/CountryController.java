@@ -3,6 +3,7 @@ package com.softdev.lab5.controllers;
 import com.softdev.lab5.models.Artist;
 import com.softdev.lab5.models.Country;
 import com.softdev.lab5.repositories.CountryRepo;
+import com.softdev.lab5.tools.DataValidationException;
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,9 +27,20 @@ public class CountryController {
         return repo.findAll();
     }
 
+    @GetMapping("/countries/{id}")
+    public ResponseEntity<Country> getCountry(@PathVariable(value = "id") Long countryId) throws DataValidationException {
+        Optional<Country> cc = Optional.ofNullable(repo.findById(countryId)
+                .orElseThrow(() -> new DataValidationException("Страна с таким индексом не найдена")));
+        if (cc.isPresent()) {
+            return ResponseEntity.ok(cc.get());
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
     @GetMapping("/countries/{id}/artists")
-    public ResponseEntity<List<Artist>> getCountryArtists(@PathVariable(value = "id") Long countryId) {
-        Optional<Country> cc = repo.findById(countryId);
+    public ResponseEntity<List<Artist>> getCountryArtists(@PathVariable(value = "id") Long countryId) throws DataValidationException {
+        Optional<Country> cc = Optional.ofNullable(repo.findById(countryId)
+                .orElseThrow(() -> new DataValidationException("Страна с таким индексом не найдена")));
         if (cc.isPresent()) {
             return ResponseEntity.ok(cc.get().artists);
         }
@@ -36,39 +48,35 @@ public class CountryController {
     }
 
     @PostMapping("/countries")
-    public ResponseEntity<Object> createCountry(@RequestBody Country country)
-    throws Exception {
+    public ResponseEntity<Country> createCountry(@RequestBody Country country)
+    throws DataValidationException {
         try {
-            return new ResponseEntity<Object>(repo.save(country), HttpStatus.CREATED);
+            return new ResponseEntity<>(repo.save(country), HttpStatus.CREATED);
         }
         catch (Exception ex) {
-            String error;
-            if (ex.getMessage().contains("uqname")) {
-                error = "alreadyExistCountryError";
-            }
-            else if (ex.getMessage().contains("NOT NULL")) {
-                error = "emptyCountryNameError";
-            }
-            else {
-                error = "undefinedError";
-            }
-            Map<String, String> map = new HashMap<>();
-            map.put("error", error);
-            return new ResponseEntity<Object>(map, HttpStatus.OK);
+            if (ex.getMessage().contains("uqname"))
+                throw new DataValidationException("Эта страна уже есть в базе");
+            else
+                throw new DataValidationException("Неизвестная ошибка");
         }
     }
 
     @PutMapping("/countries/{id}")
-    public ResponseEntity<Object> updateCountry(@RequestBody Country countryDetails, @PathVariable(value = "id") long id) {
-        Country country = null;
-        Optional<Country> cc = repo.findById(id);
-        if (cc.isPresent()) {
-            country = cc.get();
+    public ResponseEntity<Object> updateCountry(@RequestBody Country countryDetails, @PathVariable(value = "id") long id)
+    throws DataValidationException{
+        try {
+            Country country = repo.findById(id)
+                    .orElseThrow(() -> new DataValidationException("Страна с таким индексом не найдена"));
             country.name = countryDetails.name;
             repo.save(country);
             return new ResponseEntity<Object>(country, HttpStatus.OK);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "country not found");
+
+        }
+        catch (Exception ex) {
+            if (ex.getMessage().contains("uqname"))
+                throw new DataValidationException("Эта страна уже есть в базе");
+            else
+                throw new DataValidationException("Неизвестная ошибка");
         }
     }
 
@@ -84,4 +92,11 @@ public class CountryController {
             resp.put("deleted", Boolean.FALSE);
         return ResponseEntity.ok(resp);
     }
+
+    @PostMapping("/deleteCountries")
+    public ResponseEntity<Object> deleteCountries() {
+        repo.deleteAll();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
 }
