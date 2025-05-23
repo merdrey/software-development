@@ -1,20 +1,18 @@
 package com.softdev.lab5.controllers;
 
-import com.softdev.lab5.models.Artist;
-import com.softdev.lab5.models.Country;
-import com.softdev.lab5.models.Museum;
 import com.softdev.lab5.models.Painting;
 import com.softdev.lab5.repositories.ArtistRepo;
-import com.softdev.lab5.repositories.CountryRepo;
 import com.softdev.lab5.repositories.MuseumRepo;
 import com.softdev.lab5.repositories.PaintingRepo;
+import com.softdev.lab5.tools.DataValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.awt.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,56 +24,53 @@ import java.util.Optional;
 public class PaintingController {
     @Autowired
     PaintingRepo repo;
-    @Autowired
-    ArtistRepo artistRepo;
-    @Autowired
-    MuseumRepo museumRepo;
 
     @GetMapping("/paintings")
-    public List<Painting> getAllPaintings() {
-        return repo.findAll();
+    public Page<Painting> getAllPaintings(@RequestParam("page") int page, @RequestParam("limit") int limit) {
+        return repo.findAll(PageRequest.of(page, limit).withSort(Sort.by(Sort.Direction.ASC, "name")));
+    }
+
+    @GetMapping("/paintings/{id}")
+    public ResponseEntity<Painting> getPainting(@PathVariable ("id") long id) throws DataValidationException {
+        Painting painting = repo.findById(id).orElseThrow(() -> new DataValidationException("Картина с таким индексом не найдена"));
+        return new ResponseEntity<>(painting, HttpStatus.OK);
     }
 
     @PostMapping("/paintings")
-    public ResponseEntity<Object> createPainting(@RequestBody Painting paint) throws Exception{
+    public ResponseEntity<Object> createPainting(@RequestBody Painting paint) throws DataValidationException{
         try {
-            Optional<Artist> optArt = artistRepo.findById(paint.artist.id);
-            Optional<Museum> optMuseum = museumRepo.findById(paint.museum.id);
-            if (optArt.isPresent()) {
-                paint.artist = optArt.get();
-            }
-            if (optMuseum.isPresent()) {
-                paint.museum = optMuseum.get();
-            }
-            return new ResponseEntity<>(repo.save(paint), HttpStatus.OK);
+            return new ResponseEntity<>(repo.save(paint), HttpStatus.CREATED);
         }
         catch (Exception ex) {
-            String error;
-            if (ex.getMessage().contains("NOT NULL")) {
-                error = "emptyPaintingNameError";
-            }
-            else {
-                error = "undefinedError";
-            }
-            Map<String, String> map = new HashMap<>();
-            map.put("error", error);
-            return new ResponseEntity<>(map, HttpStatus.OK);
+            if (ex.getMessage().contains("uqname"))
+                throw new DataValidationException("Эта картина уже есть в базе");
+            else
+                throw new DataValidationException("Неизвестная ошибка");
         }
     }
 
     @PutMapping("/paintings/{id}")
-    public ResponseEntity<Object> updatePainting(@RequestBody Painting paintingDetails, @PathVariable(value = "id") long id) {
-        Painting painting;
-        Optional<Painting> opPaint = repo.findById(id);
-        if (opPaint.isPresent()) {
-            painting = opPaint.get();
+    public ResponseEntity<Object> updatePainting(@RequestBody Painting paintingDetails, @PathVariable(value = "id") long id) throws DataValidationException {
+        try {
+            Painting painting = repo.findById(id)
+                    .orElseThrow(() -> new DataValidationException("Картина с таким индексом не найдена"));
             painting.name = paintingDetails.name;
             painting.year = paintingDetails.year;
-            repo.save(painting);
-            return new ResponseEntity<>(painting, HttpStatus.OK);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "artist not found");
+            return new ResponseEntity<Object>(repo.save(painting), HttpStatus.OK);
+
         }
+        catch (Exception ex) {
+            if (ex.getMessage().contains("uqname"))
+                throw new DataValidationException("Эта страна уже есть в базе");
+            else
+                throw new DataValidationException("Неизвестная ошибка");
+        }
+    }
+
+    @PostMapping("/deletePaintings")
+    public ResponseEntity<List<Painting>> deletePaintings(@RequestBody List<Painting> paintings) {
+        repo.deleteAll(paintings);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/paintings/{id}")

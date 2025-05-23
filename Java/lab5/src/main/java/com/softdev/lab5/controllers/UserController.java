@@ -2,21 +2,24 @@ package com.softdev.lab5.controllers;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.softdev.lab5.models.Museum;
+import com.softdev.lab5.models.Painting;
 import com.softdev.lab5.models.User;
 import com.softdev.lab5.repositories.MuseumRepo;
 import com.softdev.lab5.repositories.UserRepo;
+import com.softdev.lab5.tools.DataValidationException;
+import com.softdev.lab5.tools.Utils;
 import com.softdev.lab5.tools.View;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -28,34 +31,27 @@ public class UserController {
     @Autowired
     MuseumRepo museumRepo;
 
-    @JsonView(View.Rest.class)
     @GetMapping("/users")
-    public List<User> getAllUsers() {
-        return repo.findAll();
+    public Page<User> getAllUsers(@RequestParam("page") int page, @RequestParam("limit") int limit) {
+        return repo.findAll(PageRequest.of(page, limit));
+    }
+
+    @GetMapping("/users/{id}")
+    public ResponseEntity<User> getUser(@PathVariable("id") long id) throws DataValidationException {
+        User user = repo.findById(id).orElseThrow(() -> new DataValidationException("Пользователь с таким индексом не найден"));
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @PostMapping("/users")
-    public ResponseEntity<Object> createUser(@RequestBody User user) throws Exception{
+    public ResponseEntity<Object> createUser(@RequestBody User user) throws DataValidationException {
         try {
-            return new ResponseEntity<>(repo.save(user), HttpStatus.OK);
+            return new ResponseEntity<>(repo.save(user), HttpStatus.CREATED);
         }
         catch (Exception ex) {
-            String error;
-            if (ex.getMessage().contains("uqemail")) {
-                error = "alreadyExistUserEmailError";
-            }
-            else if (ex.getMessage().contains("uqlogin")) {
-                error = "alreadyExistUserLoginError";
-            }
-            else if (ex.getMessage().contains("NOT NULL")) {
-                error = "emptyFieldError";
-            }
-            else {
-                error = "undefinedError";
-            }
-            Map<String, String> map = new HashMap<>();
-            map.put("error", error);
-            return new ResponseEntity<Object>(map, HttpStatus.OK);
+            if (ex.getMessage().contains("uqlogin"))
+                throw new DataValidationException("Этот пользователь уже есть в базе");
+            else
+                throw new DataValidationException("Неизвестная ошибка");
         }
     }
 
@@ -80,17 +76,30 @@ public class UserController {
     }
 
     @PutMapping("/users/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable(value = "id") Long userId, @RequestBody User userDetails) {
-        User user;
-        Optional<User> uu = repo.findById(userId);
-        if (uu.isPresent()) {
-            user = uu.get();
-            user.login = userDetails.login;
+    public ResponseEntity updateUser(@PathVariable(value = "id") Long userId,
+                                     @RequestBody User userDetails)
+            throws DataValidationException
+    {
+        try {
+            User user = repo.findById(userId)
+                    .orElseThrow(() -> new DataValidationException(" Пользователь с таким индексом не найден"));
             user.email = userDetails.email;
+            String np = userDetails.np;
+            if (np != null  && !np.isEmpty()) {
+                byte[] b = new byte[32];
+                new Random().nextBytes(b);
+                String salt = new String(Hex.encode(b));
+                user.password = Utils.ComputeHash(np, salt);
+                user.salt = salt;
+            }
             repo.save(user);
             return ResponseEntity.ok(user);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found");
+        }
+        catch (Exception ex) {
+            if (ex.getMessage().contains("emailuqname"))
+                throw new DataValidationException("Пользователь с такой почтой уже есть в базе");
+            else
+                throw new DataValidationException("Неизвестная ошибка");
         }
     }
 
@@ -111,7 +120,13 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("users/{id}")
+    @PostMapping("/deleteUsers")
+    public ResponseEntity<List<User>> deleteUsers(@RequestBody List<User> users) {
+        repo.deleteAll(users);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/users/{id}")
     public ResponseEntity<Object> deleteUser(@PathVariable(value = "id") Long userId) {
         Optional<User> user = repo.findById(userId);
         Map<String, Boolean> resp = new HashMap<>();

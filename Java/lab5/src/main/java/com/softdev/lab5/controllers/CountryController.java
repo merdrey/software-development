@@ -6,6 +6,9 @@ import com.softdev.lab5.repositories.CountryRepo;
 import com.softdev.lab5.tools.DataValidationException;
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +26,8 @@ public class CountryController {
     CountryRepo repo;
 
     @GetMapping("/countries")
-    public List<Country> getAllCountries() {
-        return repo.findAll();
+    public Page<Country> getAllCountries(@RequestParam("page") int page, @RequestParam("limit") int limit) {
+        return repo.findAll(PageRequest.of(page, limit).withSort(Sort.by(Sort.Direction.ASC, "name")));
     }
 
     @GetMapping("/countries/{id}")
@@ -94,8 +97,8 @@ public class CountryController {
     }
 
     @PostMapping("/deleteCountries")
-    public ResponseEntity<Object> deleteCountries() {
-        repo.deleteAll();
+    public ResponseEntity<List<Country>> deleteCountries(@RequestBody List<Country> countries) {
+        repo.deleteAll(countries);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

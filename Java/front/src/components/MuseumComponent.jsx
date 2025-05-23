@@ -7,11 +7,12 @@ import {useNavigate, useParams} from 'react-router'
 import { Button, Form } from 'react-bootstrap';
 import { alertActions } from '../utils/Rdx';
 
-const CountryComponent = props => {
+const MuseumComponent = props => {
 
     const nav = useNavigate();
     const [hidden, setHidden] = useState(true);
     const [name, setName] = useState('');
+    const [location, setLocation] = useState('');
     const id = useParams().id;
 
     const handleSubmit = e => {
@@ -19,7 +20,7 @@ const CountryComponent = props => {
         
         let err = null;
 
-        if (name == "") {
+        if (name == "" || location == "") {
             err = 'Пустое поле ввода'
         }
 
@@ -28,40 +29,39 @@ const CountryComponent = props => {
         } 
         else {
             if (id == -1) {
-            let country = {
-                name: name
+            let museum = {
+                name: name,
+                location: location
             }
-            BackendService.createCountry(country)
-            .then(nav('/countries'))
+            BackendService.createMuseum(museum)
+            .then(nav('/museums'))
             .catch(() => {
             })
 
         } 
         else {
-            let country = {
+            let museum = {
                 id: id,
-                name: name
+                name: name,
+                location: location
             }
-            BackendService.updateCountry(country)
-            .then(nav('/countries'))
+            BackendService.updateMuseum(museum)
+            .then(nav('/museums'))
             .catch(() => {
             })
         }
         }
     }
 
-    const handleChange = (e) => {
-        setName(e.target.value);
-    }
-
     const onBackButtonClicked = () => {
-        nav('/countries');
+        nav('/museums');
     }
 
-    const getCountry = () => {        
+    const getMuseum = () => {        
         if (id != -1) {
-            BackendService.retrieveCountry(id).then(resp => {
+            BackendService.retrieveMuseum(id).then(resp => {
                 setName(resp.data.name);
+                setLocation(resp.data.location);
                 setHidden(false);
             })
             .catch(() => {
@@ -74,7 +74,7 @@ const CountryComponent = props => {
     }
 
     useEffect(() => {
-            getCountry();
+            getMuseum();
         }, [])
     
     if (hidden)
@@ -83,7 +83,7 @@ const CountryComponent = props => {
          <div className="m-4">
             <div className="row my-2">
                 <div className='col'>
-                    <h3>Страна</h3>
+                    <h3>Музей</h3>
                 </div>
                 <div className="btn-toolbar col">
                     <div className="btn-group ms-auto">
@@ -104,7 +104,17 @@ const CountryComponent = props => {
                         type='text'
                         value={name} 
                         name="name" 
-                        onChange={handleChange} 
+                        onChange={(e) => setName(e.target.value)} 
+                        autoComplete='off'>
+                    </Form.Control>
+                    <Form.Label>
+                        Расположение
+                    </Form.Label>
+                    <Form.Control 
+                        type='text'
+                        value={location} 
+                        name="location" 
+                        onChange={(e) => setLocation(e.target.value)} 
                         autoComplete='off'>
                     </Form.Control>
                 </Form.Group>
@@ -116,4 +126,4 @@ const CountryComponent = props => {
     );
 }
 
-export default connect()(CountryComponent);
+export default connect()(MuseumComponent);
